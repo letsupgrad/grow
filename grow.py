@@ -99,7 +99,7 @@ def initialize_data():
     # Billboard data remains the same
     billboards = {
         "Grow Your Greens": {
-            "url": "https://i.imgur.com/U4A0lRQ.jpg",
+            "url": "https://www.vecteezy.com/photo/22448088-earth-day-environment-day-nature-green-ai-generative-glossy-background-images-tree-and-water",
             "description": "A campaign promoting home vegetable gardening for urban dwellers.",
             "sponsor": "OrganicFoods Co."
         },
