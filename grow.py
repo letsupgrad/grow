@@ -197,9 +197,21 @@ def display_sidebar():
         - **Admin Panel**: (Admin Role) Manage users and content.
         - **Support**: Email help@growvertising.com
         """)
+        st.markdown("---") # Separator
 
-    return page, simulated_role # Return role for use in main logic
+        st.markdown("#### About This App (Growvertising Demo)")
+        st.markdown("""
+        This application demonstrates the "Growvertising" concept, connecting **advertising campaigns (Billboards)** with tangible **environmental action (Farmboards)**, specifically promoting and tracking home gardening. It simulates a platform for different user roles:
 
+        *   **Users:** Participate in campaigns, track personal plant growth, and engage with the community.
+        *   **Sponsors:** Fund campaigns and monitor their impact through analytics.
+        *   **Admins:** Oversee the simulated platform.
+
+        **Goal:** To showcase how advertising can be linked to positive environmental action and community building.
+        """) # Slightly condensed summary
+
+    return page, simulated_role
+    
 # ------ HOME PAGE ------
 def display_home(billboards):
     """Displays the main home page with billboard previews and stats."""
