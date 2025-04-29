@@ -916,7 +916,7 @@ def main():
 
     # --- Footer --- (Optional)
     st.markdown("---")
-    st.caption("🌿 Growvertising Demo © 2025 | Transforming Ads into Action")
+    st.caption("🌿 Growvertising © 2025 | Transforming Ads into Action| developed sangita biswas")
 
 
 if __name__ == "__main__":
