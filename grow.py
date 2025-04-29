@@ -110,7 +110,7 @@ def initialize_data():
             "sponsor": "OrganicFoods Co."
         },
         "From Message to Meal": {
-            "url": "https://i.imgur.com/GQhuf0U.jpg",
+            "url": "close-up-hands-taking-food-photos.jpg",
             "description": "An initiative turning advertising space into food production.",
             "sponsor": "EcoEats"
         },
