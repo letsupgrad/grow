@@ -274,6 +274,8 @@ def display_community(current_user_name="Demo User"):
 
 # ------ SPONSOR DASHBOARD FUNCTION ------
 # MUST BE DEFINED BEFORE main()
+# ------ SPONSOR DASHBOARD FUNCTION ------
+# MUST BE DEFINED BEFORE main()
 def display_sponsor_dashboard():
     st.markdown("<h1 class='sub-title'>📊 Sponsor Dashboard</h1>", unsafe_allow_html=True)
     st.markdown("Monitor campaign impact and performance.")
@@ -300,8 +302,9 @@ def display_sponsor_dashboard():
     with tab_grw: st.area_chart(grw_data); st.caption("Sim. cumulative growth (30d)")
     with tab_roi:
         st.markdown("#### ROI (Illustrative)")
-        inv_base = {"Grow Greens": 15k, "Msg->Meal": 12k, "Waste Aware": 8k, "Urban Farm": 10k} # Simplified amounts
-        inv = {c: inv_base.get(c, 10000) for c in camp_names}
+        # CORRECTED: Use full numbers, not 'k' notation
+        inv_base = {"Grow Greens": 15000, "Msg->Meal": 12000, "Waste Aware": 8000, "Urban Farm": 10000}
+        inv = {c: inv_base.get(c, 10000) for c in camp_names} # Get investment per campaign
         eng_sum = eng_data.sum() if not eng_data.empty else pd.Series(0, index=camp_names)
         grw_last = grw_data.iloc[-1] if not grw_data.empty else pd.Series(0, index=camp_names)
         val_gen = (eng_sum*0.5 + grw_last*10).round(0)
@@ -317,11 +320,20 @@ def display_sponsor_dashboard():
     st.markdown("### Campaign Management")
     with st.expander("🚀 Launch New Campaign (Example)"):
         c1, c2 = st.columns(2)
-        with c1: name=st.text_input("Name", key="sp_c_n"); desc=st.text_area("Desc", key="sp_c_d"); aud=st.multiselect("Audience", ["Urban", "Families", "Students"], key="sp_c_a")
-        with c2: bud=st.number_input("Budget ($)", 1k, 100k, 10k, 500, key="sp_c_b"); sd=st.date_input("Start", key="sp_c_s"); ed=st.date_input("End", key="sp_c_e"); img=st.file_uploader("Image", ['png','jpg'], key="sp_c_i")
+        # Use more descriptive variable names in the form
+        with c1:
+            campaign_name=st.text_input("Name", key="sp_c_n")
+            campaign_desc=st.text_area("Desc", key="sp_c_d")
+            target_audience=st.multiselect("Audience", ["Urban", "Families", "Students"], key="sp_c_a")
+        with c2:
+            campaign_budget=st.number_input("Budget ($)", 1000, 100000, 10000, 500, key="sp_c_b") # Corrected min value
+            start_date=st.date_input("Start", key="sp_c_s")
+            end_date=st.date_input("End", key="sp_c_e")
+            campaign_image=st.file_uploader("Image", ['png','jpg'], key="sp_c_i")
         if st.button("Submit Proposal", key="sp_c_sub"):
-            if all([name, desc, bud, sd, ed]) and sd <= ed: st.success("Submitted!")
-            else: st.warning("Fill required fields.")
+            if all([campaign_name, campaign_desc, campaign_budget, start_date, end_date]) and start_date <= end_date:
+                 st.success("Submitted!")
+            else: st.warning("Fill required fields correctly.")
     st.markdown("---")
 
     st.markdown("### Community Analytics")
@@ -362,14 +374,17 @@ def display_sponsor_dashboard():
                 pdf = b"Sample PDF" # Placeholder
                 data = csv if rep_fmt == "CSV" else pdf
                 mime = "text/csv" if rep_fmt == "CSV" else "application/pdf"
+                # Generate button triggers download button display
                 if st.button("Generate & Download", key="gen_rep_btn"):
                     with st.spinner("Generating..."): time.sleep(1.0)
                     st.download_button(f"Download {rep_fmt}", data, rep_fname, mime, key="dl_rep_final")
             else:
+                 # Show disabled button if no data
                  st.button("Generate & Download", key="gen_rep_btn_dis", disabled=True)
         except Exception as e:
             st.error(f"Report gen error: {e}"); st.exception(e)
             st.button("Generate & Download", key="gen_rep_btn_err", disabled=True)
+      
 
 # ------ ADMIN PANEL FUNCTION ------
 # MUST BE DEFINED BEFORE main()
