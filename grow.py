@@ -187,14 +187,15 @@ def display_sidebar():
     st.sidebar.markdown(f"**Plants Currently Growing:** {plants_grown_user}")
     st.sidebar.markdown(f"**Est. CO₂ Offset:** {plants_grown_user * random.randint(2, 5)} kg")
 
-    # Help section remains the same
+    # Help section - ADDED SUMMARY HERE
     with st.sidebar.expander("Need Help?"):
         st.markdown("""
-        - **Home**: View billboard campaigns and track progress.
-        - **My Plants**: Manage your growing plants.
-        - **Community**: Share photos and interact with others.
-        - **Sponsor Dashboard**: (Sponsors/Admin Roles) View campaign metrics.
-        - **Admin Panel**: (Admin Role) Manage users and content.
+        **Navigation Guide:**
+        - **Home**: View billboard campaigns and track overall progress.
+        - **My Plants**: Manage the plants you are personally growing.
+        - **Community**: Share photos, comments, and connect with others.
+        - **Sponsor Dashboard**: (Sponsors/Admin Roles) View campaign metrics & ROI.
+        - **Admin Panel**: (Admin Role) Simulate platform management tasks.
         - **Support**: Email help@growvertising.com
         """)
         
