@@ -1,7 +1,8 @@
-# --- IMPORTS ---
 import streamlit as st
+# Removed streamlit_authenticator import
 from datetime import datetime
 import random
+# Removed PIL import as it's not explicitly used
 import pandas as pd
 import numpy as np
 import time
@@ -9,7 +10,7 @@ import io
 
 # ------ PAGE CONFIGURATION ------
 st.set_page_config(
-    page_title="Growvertising - Billboard to Farmboard (Demo)",
+    page_title="Growvertising - Billboard to Farmboard (Demo)", # Updated title
     page_icon="🌿",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -18,94 +19,189 @@ st.set_page_config(
 # ------ CSS STYLING ------
 st.markdown("""
 <style>
-    .main-title { font-size: 42px !important; color: #2E7D32; text-align: center; }
-    .sub-title { font-size: 28px !important; color: #388E3C; }
-    .sidebar-text { font-size: 16px; }
-    .highlight { background-color: #E8F5E9; padding: 10px; border-radius: 5px; }
-    .metric-card { background-color: #F1F8E9; padding: 15px; border-radius: 10px; box-shadow: 2px 2px 5px rgba(0,0,0,0.1); margin-bottom: 10px; }
-    .stButton>button { width: 100%; margin-bottom: 5px; }
-    .stContainer { border: 1px solid #e0e0e0; border-radius: 5px; padding: 15px; margin-bottom: 15px; }
+    .main-title {
+        font-size: 42px !important;
+        color: #2E7D32;
+        text-align: center;
+    }
+    .sub-title {
+        font-size: 28px !important;
+        color: #388E3C;
+    }
+    .sidebar-text {
+        font-size: 16px;
+    }
+    .highlight {
+        background-color: #E8F5E9;
+        padding: 10px;
+        border-radius: 5px;
+    }
+    .metric-card {
+        background-color: #F1F8E9;
+        padding: 15px;
+        border-radius: 10px;
+        box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        margin-bottom: 10px; /* Add some spacing */
+    }
+    /* Ensure buttons within columns are aligned well */
+    .stButton>button {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+    /* Style containers for better visual separation */
+    .stContainer {
+        border: 1px solid #e0e0e0;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# ------ DATA INITIALIZATION FUNCTION ------
-# MUST BE DEFINED BEFORE main()
+# ------ AUTHENTICATION (REMOVED) ------
+# The setup_authentication function has been removed.
+# We will use session state to simulate the user role.
+
+# ------ DATA INITIALIZATION ------
 def initialize_data():
     """Initializes session state variables and static data."""
-    if "comments" not in st.session_state: st.session_state["comments"] = []
-    if "uploads" not in st.session_state: st.session_state["uploads"] = []
-    if "plants_grown" not in st.session_state: st.session_state["plants_grown"] = random.randint(1000, 1500)
-    if "co2_offset" not in st.session_state: st.session_state["co2_offset"] = random.randint(300, 500)
-    if "seed_kits" not in st.session_state: st.session_state["seed_kits"] = random.randint(700, 1000)
-    if "last_visit" not in st.session_state: st.session_state["last_visit"] = datetime.now()
+    # Initialize session state variables if they don't exist
+    if "comments" not in st.session_state:
+        st.session_state["comments"] = []
+
+    if "uploads" not in st.session_state:
+        st.session_state["uploads"] = []
+
+    if "plants_grown" not in st.session_state:
+        st.session_state["plants_grown"] = random.randint(1000, 1500)
+
+    if "co2_offset" not in st.session_state:
+        st.session_state["co2_offset"] = random.randint(300, 500)
+
+    if "seed_kits" not in st.session_state:
+        st.session_state["seed_kits"] = random.randint(700, 1000)
+
+    if "last_visit" not in st.session_state:
+        st.session_state["last_visit"] = datetime.now()
+
     if "user_plants" not in st.session_state:
         st.session_state["user_plants"] = [
             {"name": "Tomato", "progress": random.randint(20, 95), "days_old": random.randint(5, 30), "planted_date": datetime(2025, 1, 15)},
-            {"name": "Basil", "progress": random.randint(20, 95), "days_old": random.randint(5, 30), "planted_date": datetime(2025, 2, 3)} ]
+            {"name": "Basil", "progress": random.randint(20, 95), "days_old": random.randint(5, 30), "planted_date": datetime(2025, 2, 3)}
+        ]
+
     if "user_plant_history" not in st.session_state:
          st.session_state["user_plant_history"] = [
                 {"Plant Type": "Lettuce", "Date Planted": "2025-02-28", "Harvest Date": "2025-04-10", "Success": "Yes"},
-                {"Plant Type": "Spinach", "Date Planted": "2025-03-10", "Harvest Date": "Failed", "Success": "No"} ]
-    if "simulated_role" not in st.session_state: st.session_state["simulated_role"] = "user"
-    if not st.session_state.get("comments_initialized"): # Add initialization check for sample comments
-        st.session_state["comments_initialized"] = False
+                {"Plant Type": "Spinach", "Date Planted": "2025-03-10", "Harvest Date": "Failed", "Success": "No"}
+            ]
 
+    # Billboard data remains the same
     billboards = {
-        "Grow Your Greens": {"url": "https://i.imgur.com/U4A0lRQ.jpg", "description": "Promoting home vegetable gardening.", "sponsor": "OrganicFoods Co."},
-        "From Message to Meal": {"url": "https://i.imgur.com/GQhuf0U.jpg", "description": "Turning ad space into food production.", "sponsor": "EcoEats"},
-        "Food Waste Awareness": {"url": "https://i.imgur.com/XY5NJJx.jpg", "description": "Highlighting reducing food waste.", "sponsor": "WasteNot Foundation"},
-        "Urban Farming Revolution": {"url": "https://i.imgur.com/U4A0lRQ.jpg", "description": "Transforming city spaces.", "sponsor": "CityGrow Initiative"} }
+        "Grow Your Greens": {
+            "url": "https://i.imgur.com/U4A0lRQ.jpg",
+            "description": "A campaign promoting home vegetable gardening for urban dwellers.",
+            "sponsor": "OrganicFoods Co."
+        },
+        "From Message to Meal": {
+            "url": "https://i.imgur.com/GQhuf0U.jpg",
+            "description": "An initiative turning advertising space into food production.",
+            "sponsor": "EcoEats"
+        },
+        "Food Waste Awareness": {
+            "url": "https://i.imgur.com/XY5NJJx.jpg",
+            "description": "Highlighting the importance of reducing food waste in our communities.",
+            "sponsor": "WasteNot Foundation"
+        },
+        "Urban Farming Revolution": {
+            "url": "https://i.imgur.com/U4A0lRQ.jpg", # Using same image for example
+            "description": "Transforming city spaces into productive green gardens.",
+            "sponsor": "CityGrow Initiative"
+        }
+    }
     return billboards
 
-# ------ SIDEBAR CONTENT FUNCTION ------
-# MUST BE DEFINED BEFORE main()
+# ------ SIDEBAR CONTENT ------
 def display_sidebar():
     """Displays the navigation sidebar and allows role simulation."""
     st.sidebar.markdown("## 🌿 Navigation")
+
+    # --- Role Simulation (Replaces Login) ---
     st.sidebar.markdown("---")
-    st.sidebar.markdown("### Simulate User Role")
+    st.sidebar.markdown("### Simulate User Role (Demo)")
+    # Define roles and get current selection from session state, default to 'user'
     roles = ["user", "sponsor", "admin"]
     default_role_index = roles.index(st.session_state.get("simulated_role", "user"))
+    
     simulated_role = st.sidebar.selectbox(
-        "Select Role", roles, index=default_role_index, key="simulated_role_selector",
-        format_func=lambda x: x.capitalize() )
+        "Select Role",
+        roles,
+        index=default_role_index,
+        key="simulated_role_selector",
+        format_func=lambda x: x.capitalize() # Display roles nicely capitalized
+    )
+    # Store the selected simulated role in session state
     st.session_state["simulated_role"] = simulated_role
     st.sidebar.markdown("---")
+    # --- End Role Simulation ---
 
+
+    # Determine available pages based on the *simulated* role
     available_pages = ["Home", "My Plants", "Community"]
-    if simulated_role in ["sponsor", "admin"]: available_pages.append("Sponsor Dashboard")
-    if simulated_role == "admin": available_pages.append("Admin Panel")
+    if simulated_role in ["sponsor", "admin"]:
+        available_pages.append("Sponsor Dashboard")
+    if simulated_role == "admin":
+        available_pages.append("Admin Panel")
+
+    # Set default page index (e.g., always start at Home)
     default_index = 0
-    page = st.sidebar.radio("Go to", available_pages, index=default_index, key="navigation_radio")
+
+    page = st.sidebar.radio(
+        "Go to",
+        available_pages,
+        index=default_index,
+        key="navigation_radio"
+    )
+
     st.sidebar.markdown("---")
 
-    activity_score = random.randint(10, 100)
-    if activity_score > 80: badge = "🌟 Super Grower"
-    elif activity_score > 50: badge = "🌿 Urban Farmer"
-    else: badge = "🍀 Green Starter"
-    st.sidebar.markdown(f"### Profile ({simulated_role.capitalize()})")
+    # Display dynamic user stats (simplified for demo)
+    activity_score = random.randint(10, 100) # Example score
+    if activity_score > 80:
+        badge = "🌟 Super Grower"
+    elif activity_score > 50:
+        badge = "🌿 Urban Farmer"
+    else:
+        badge = "🍀 Green Starter"
+
+    st.sidebar.markdown(f"### Profile ({simulated_role.capitalize()})") # Show simulated role instead of username
     st.sidebar.markdown(f"**Badge:** {badge}")
     st.sidebar.progress(activity_score / 100)
     plants_grown_user = len(st.session_state.get("user_plants", []))
-    st.sidebar.markdown(f"**Plants Growing:** {plants_grown_user}")
+    st.sidebar.markdown(f"**Plants Currently Growing:** {plants_grown_user}")
     st.sidebar.markdown(f"**Est. CO₂ Offset:** {plants_grown_user * random.randint(2, 5)} kg")
 
+    # Help section remains the same
     with st.sidebar.expander("Need Help?"):
         st.markdown("""
-        - **Home**: View campaigns & progress.
-        - **My Plants**: Manage your plants.
-        - **Community**: Share & interact.
-        - **Sponsor Dashboard**: View metrics.
-        - **Admin Panel**: Manage users/content.
-        - **Support**: help@growvertising.com
+        - **Home**: View billboard campaigns and track progress.
+        - **My Plants**: Manage your growing plants.
+        - **Community**: Share photos and interact with others.
+        - **Sponsor Dashboard**: (Sponsors/Admin Roles) View campaign metrics.
+        - **Admin Panel**: (Admin Role) Manage users and content.
+        - **Support**: Email help@growvertising.com
         """)
-    return page, simulated_role
 
-# ------ HOME PAGE FUNCTION ------
-# MUST BE DEFINED BEFORE main()
+    return page, simulated_role # Return role for use in main logic
+
+# ------ HOME PAGE ------
+# Unchanged from the previous version
 def display_home(billboards):
+    """Displays the main home page with billboard previews and stats."""
     st.markdown("<h1 class='main-title'>🌿 Growvertising – Billboard to Farmboard</h1>", unsafe_allow_html=True)
     st.markdown("Turn every ad into action – grow plants, offset carbon, and join the green movement.")
+
+    # --- Overall Impact Metrics ---
     st.markdown("<h2 class='sub-title'>🌍 Overall Impact</h2>", unsafe_allow_html=True)
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -120,346 +216,649 @@ def display_home(billboards):
         st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
         st.metric("Seed Kits Distributed", f"{st.session_state['seed_kits']}")
         st.markdown("</div>", unsafe_allow_html=True)
-    st.markdown("---")
+
+    st.markdown("---") # Separator
+
+    # --- Billboard Preview Section ---
     st.markdown("<h2 class='sub-title'>🖼️ Featured Campaigns</h2>", unsafe_allow_html=True)
+
     selected_ad = st.selectbox("Select Campaign", list(billboards.keys()), key="campaign_select")
+
     col_img, col_details = st.columns([2, 1])
-    with col_img: st.image(billboards[selected_ad]["url"], caption=selected_ad, use_column_width='always')
+    with col_img:
+        st.image(billboards[selected_ad]["url"], caption=selected_ad, use_column_width='always')
+
     with col_details:
-        st.markdown(f"### {selected_ad}")
+        st.markdown(f"### Campaign Details")
         st.markdown(f"**Description:** {billboards[selected_ad]['description']}")
         st.markdown(f"**Sponsor:** {billboards[selected_ad]['sponsor']}")
         st.markdown("---")
+
+        # Add interaction options
         st.markdown("### Get Involved")
         if st.button("Request Seed Kit", key=f"seed_kit_{selected_ad}"):
-            st.session_state["seed_kits"] += 1; st.success("Seed kit requested!"); st.balloons()
-        if st.button("Support Campaign", key=f"support_{selected_ad}"):
-            st.balloons(); st.success("Thank you!")
-    st.markdown("---")
+            st.session_state["seed_kits"] += 1
+            st.success("Seed kit request submitted! Check your email for details.")
+            st.balloons() # Add visual feedback
+
+        if st.button("Support This Campaign", key=f"support_{selected_ad}"):
+            # In a real app, this might track support or link to a donation page
+            st.balloons()
+            st.success("Thank you for your support!")
+
+    st.markdown("---") # Separator
+
+    # --- Growth Simulation --- (Simplified for demo)
     st.markdown("<h2 class='sub-title'>🌱 Simulated Billboard Growth</h2>", unsafe_allow_html=True)
-    st.info("Simulated representation of plant growth.")
+    st.info("This section shows a simulated representation of plant growth on a physical billboard.")
+
     col_growth, col_days, col_water = st.columns(3)
     with col_growth:
-        growth = random.randint(60, 90); st.progress(growth / 100); st.markdown(f"**Growth:** {growth}%")
-    with col_days:
-        days = max(0, 30-int((growth/100)*30)); delta = -1 if days<30 else 0; st.metric("Days Left", f"{days}", f"{delta}")
-    with col_water:
-        status = random.choice(["Optimal", "Needs Water"]); st.metric("Water Level", status)
-        if status == "Needs Water": st.warning("💧 Low!") else: st.success("💧 Good.")
-    st.markdown("---")
-    st.markdown("<h2 class='sub-title'>🌤️ Current Conditions (Example)</h2>", unsafe_allow_html=True)
-    c1,c2,c3,c4=st.columns(4); c1.metric("Temp", "24°C"); c2.metric("Humidity", "65%"); c3.metric("Sunlight", "Good"); c4.metric("Soil", "Okay")
+        growth_percentage = random.randint(60, 90)
+        st.progress(growth_percentage / 100)
+        st.markdown(f"**Growth Level:** {growth_percentage}%")
 
-# ------ MY PLANTS PAGE FUNCTION ------
-# MUST BE DEFINED BEFORE main()
+    with col_days:
+        days_remaining = max(0, 30 - int((growth_percentage / 100) * 30))
+        delta_days = -1 if days_remaining < 30 else 0
+        st.metric("Est. Days Until Harvest", f"{days_remaining} days", f"{delta_days} vs yesterday")
+
+    with col_water:
+        water_status = random.choice(["Optimal", "Needs Water", "Slightly Dry"])
+        st.metric("Water Level Status", water_status)
+        if water_status == "Needs Water":
+            st.warning("💧 Water levels are low!")
+        elif water_status == "Optimal":
+            st.success("💧 Water levels are good.")
+
+    # --- Growing Conditions --- (Example static data)
+    st.markdown("<h2 class='sub-title'>🌤️ Current Conditions (Example Location)</h2>", unsafe_allow_html=True)
+
+    col_cond1, col_cond2, col_cond3, col_cond4 = st.columns(4)
+    with col_cond1:
+        st.metric("Temperature", "24°C", "+1.5°C")
+    with col_cond2:
+        st.metric("Humidity", "65%", "-3%")
+    with col_cond3:
+        st.metric("Sunlight", "Good", "UV Index: 6")
+    with col_cond4:
+        st.metric("Soil Moisture", "Okay", "-2%")
+
+
+# ------ MY PLANTS PAGE ------
+# Unchanged from the previous version
 def display_my_plants():
+    """Displays the user's plant management page."""
     st.markdown("<h1 class='sub-title'>🌱 My Plants</h1>", unsafe_allow_html=True)
-    st.markdown("Track and manage your growing plants.")
+    st.markdown("Track and manage the plants you are growing.")
+
     plant_types = ["Tomato", "Basil", "Lettuce", "Spinach", "Mint", "Pepper", "Chives"]
+
     col_manage, col_add = st.columns([2, 1])
+
     with col_manage:
         tab_current, tab_history = st.tabs(["Current Plants", "Plant History"])
+
         with tab_current:
-            st.markdown("### Currently Growing")
-            if not st.session_state.get("user_plants"): st.info("Add plants using the form.")
+            st.markdown("### Plants Currently Growing")
+            if not st.session_state.get("user_plants"):
+                st.info("You haven't added any plants yet. Use the form on the right to start growing!")
             else:
-                for i, plant in enumerate(st.session_state["user_plants"]):
-                    with st.container():
-                        st.markdown(f"#### {plant['name']}")
-                        st.progress(plant['progress'] / 100)
-                        ca, cb, cc = st.columns(3)
-                        ca.markdown(f"**Progress:** {plant['progress']}%")
-                        days = (datetime.now() - plant['planted_date']).days; cb.markdown(f"**Days:** {days}")
-                        health = 'Good' if plant['progress']>60 else 'Needs Attention' if plant['progress']>30 else 'Struggling'
-                        cc.markdown(f"**Health:** {health}")
-                        c_act1, c_act2 = st.columns(2)
-                        if c_act1.button("Update", key=f"upd_{i}"):
-                            st.session_state["user_plants"][i]["progress"] = min(100, plant['progress'] + random.randint(5,15)); st.rerun()
-                        if c_act2.button("Finish", key=f"fin_{i}"):
-                            h_plant = st.session_state["user_plants"].pop(i)
-                            st.session_state["user_plant_history"].append({
-                                "Plant Type": h_plant['name'], "Date Planted": h_plant['planted_date'].strftime('%Y-%m-%d'),
-                                "Harvest Date": datetime.now().strftime('%Y-%m-%d'), "Success": "Yes" })
-                            st.success(f"{h_plant['name']} history updated."); st.rerun()
-                        st.markdown("---")
+                # Iterate through user's plants stored in session state
+                for i, plant_data in enumerate(st.session_state["user_plants"]):
+                    with st.container(): # Use container for better separation
+                        st.markdown(f"#### {plant_data['name']}")
+                        st.progress(plant_data['progress'] / 100)
+
+                        col_a, col_b, col_c = st.columns(3)
+                        with col_a:
+                            st.markdown(f"**Progress:** {plant_data['progress']}%")
+                        with col_b:
+                            days_old = (datetime.now() - plant_data['planted_date']).days
+                            st.markdown(f"**Days old:** {days_old}")
+                        with col_c:
+                            health = 'Good' if plant_data['progress'] > 60 else 'Needs Attention' if plant_data['progress'] > 30 else 'Struggling'
+                            st.markdown(f"**Health:** {health}")
+
+                        # Add action buttons
+                        col_actions1, col_actions2 = st.columns(2)
+                        with col_actions1:
+                            if st.button("Update Progress", key=f"update_{i}"):
+                                st.session_state["user_plants"][i]["progress"] = min(100, plant_data['progress'] + random.randint(5,15))
+                                st.rerun()
+                        with col_actions2:
+                            if st.button("Mark as Harvested/Finished", key=f"finish_{i}"):
+                                harvested_plant = st.session_state["user_plants"].pop(i)
+                                st.session_state["user_plant_history"].append({
+                                    "Plant Type": harvested_plant['name'],
+                                    "Date Planted": harvested_plant['planted_date'].strftime('%Y-%m-%d'),
+                                    "Harvest Date": datetime.now().strftime('%Y-%m-%d'),
+                                    "Success": "Yes"
+                                })
+                                st.success(f"{harvested_plant['name']} moved to history.")
+                                st.rerun()
+
+                        st.markdown("---") # Separator between plants
+
         with tab_history:
-            st.markdown("### Plant History")
-            if not st.session_state.get("user_plant_history"): st.info("No history.")
-            else: st.dataframe(pd.DataFrame(st.session_state["user_plant_history"]), use_container_width=True, hide_index=True)
+            st.markdown("### Past Plants")
+            if not st.session_state.get("user_plant_history"):
+                 st.info("No plant history yet.")
+            else:
+                history_df = pd.DataFrame(st.session_state["user_plant_history"])
+                st.dataframe(history_df, use_container_width=True, hide_index=True)
+
     with col_add:
         st.markdown("### Add New Plant")
         with st.form("add_plant_form", clear_on_submit=True):
-            type = st.selectbox("Type", plant_types, key="np_type")
-            date = st.date_input("Planted", datetime.now().date(), key="np_date")
-            notes = st.text_area("Notes", key="np_notes")
-            if st.form_submit_button("Start Growing"):
-                st.session_state["user_plants"].append({
-                    "name": type, "progress": random.randint(5, 15),
-                    "planted_date": datetime.combine(date, datetime.min.time()), "notes": notes })
-                st.success(f"Added {type}!"); st.balloons()
-        st.markdown("---")
-        st.markdown("### Care Tips")
-        tip = random.choice(["Tomatoes love sun.", "Basil likes moist soil.", "Lettuce dislikes heat.", "Rotate crops.", "Check for pests."])
-        st.info(f"💡 Tip: {tip}")
-        st.markdown("### Tasks (Example)")
-        st.markdown("- Water tomatoes\n- Harvest lettuce\n- Fertilize basil")
+            new_plant_type = st.selectbox("Plant Type", plant_types, key="new_plant_type")
+            plant_date = st.date_input("Planting Date", datetime.now().date(), key="new_plant_date")
+            notes = st.text_area("Notes (optional)", key="new_plant_notes")
 
-# ------ COMMUNITY PAGE FUNCTION ------
-# MUST BE DEFINED BEFORE main()
-def display_community(current_user_name="Demo User"):
-    st.markdown("<h1 class='sub-title'>👨‍👩‍👧‍👦 Community Hub</h1>", unsafe_allow_html=True)
-    st.markdown("Share progress, ask questions, connect!")
-    tab_photos, tab_comments = st.tabs(["📸 Photo Wall", "💬 Discussion"])
-    with tab_photos:
-        st.markdown("### Share Photos")
-        uploaded_file = st.file_uploader("Upload photo!", type=["jpg", "png", "jpeg"], key="photo_uploader")
-        caption = st.text_input("Caption", key="photo_caption")
-        location = st.text_input("Location (optional)", key="photo_location")
-        if st.button("Upload", key="upload_photo_btn") and uploaded_file:
-            if caption:
-                img_bytes = uploaded_file.getvalue()
-                st.session_state["uploads"].append({
-                    "image_bytes": img_bytes, "caption": caption, "location": location or "Unknown",
-                    "user": current_user_name, "timestamp": datetime.now(), "likes": 0 })
-                st.success("Uploaded! 🌿"); st.rerun()
-            else: st.warning("Add caption.")
-        elif st.button("Upload", key="upload_photo_btn_no") and not uploaded_file: st.warning("Select photo.")
+            submitted = st.form_submit_button("Start Growing")
+            if submitted:
+                st.session_state["user_plants"].append({
+                    "name": new_plant_type,
+                    "progress": random.randint(5, 15),
+                    "planted_date": datetime.combine(plant_date, datetime.min.time()),
+                    "notes": notes
+                })
+                st.success(f"Added {new_plant_type} to your garden!")
+                st.balloons()
+
         st.markdown("---")
-        st.markdown("### Recent Photos")
-        if not st.session_state.get("uploads"): st.info("No photos yet.")
+        st.markdown("### Plant Care Tips")
+        tip = random.choice([
+            "Tomatoes love sunlight! Ensure they get at least 6-8 hours daily.",
+            "Basil prefers consistently moist soil. Water when the top inch feels dry.",
+            "Lettuce can bolt (go to seed) in hot weather. Provide some afternoon shade.",
+            "Rotate your crops each season to prevent soil depletion and pests.",
+            "Check for common pests like aphids regularly. Neem oil can be an organic solution."
+        ])
+        st.info(f"💡 Tip: {tip}")
+
+        st.markdown("### Upcoming Tasks (Example)")
+        st.markdown("- Water tomato plants (check soil first)")
+        st.markdown("- Harvest outer lettuce leaves soon")
+        st.markdown("- Consider adding organic fertilizer to basil")
+
+# ------ COMMUNITY PAGE ------
+# Modified to accept a generic user name
+def display_community(current_user_name="Community User"): # Default user name
+    """Displays the community interaction page."""
+    st.markdown("<h1 class='sub-title'>👨‍👩‍👧‍👦 Community Hub</h1>", unsafe_allow_html=True)
+    st.markdown("Share your progress, ask questions, and connect with fellow growers!")
+
+    tab_photos, tab_comments = st.tabs(["📸 Photo Wall", "💬 Discussion Forum"])
+
+    with tab_photos:
+        st.markdown("### Share Your Plant Photos")
+
+        uploaded_file = st.file_uploader(
+            "Upload a photo of your plants!",
+            type=["jpg", "png", "jpeg"],
+            key="photo_uploader"
+        )
+        caption = st.text_input("Caption for your photo", key="photo_caption")
+        location = st.text_input("Location (optional, e.g., 'City, State')", key="photo_location")
+
+        if st.button("Upload Photo", key="upload_photo_btn") and uploaded_file is not None:
+            if caption:
+                image_bytes = uploaded_file.getvalue()
+                st.session_state["uploads"].append({
+                    "image_bytes": image_bytes,
+                    "caption": caption,
+                    "location": location if location else "Unknown Location",
+                    "user": current_user_name, # Use the generic name
+                    "timestamp": datetime.now(),
+                    "likes": 0
+                })
+                st.success("Photo uploaded successfully! 🌿")
+                st.rerun()
+            else:
+                st.warning("Please add a caption for your photo.")
+        elif st.button("Upload Photo", key="upload_photo_btn_clicked_no_file") and uploaded_file is None:
+             st.warning("Please select a photo file first.")
+
+        st.markdown("---")
+        st.markdown("### Recent Community Photos")
+
+        if not st.session_state.get("uploads"):
+            st.info("No photos shared yet. Be the first!")
         else:
+            num_photos = len(st.session_state["uploads"])
             cols = st.columns(3)
+
             for i, upload in enumerate(reversed(st.session_state["uploads"])):
-                with cols[i % 3], st.container():
-                    try: st.image(upload["image_bytes"], caption=f"{upload['caption']} ({upload['user']})", use_column_width='always')
-                    except Exception as e: st.error(f"Bad image: {e}")
-                    key = f"like_photo_{upload['timestamp'].isoformat()}"; likes = upload.get("likes", 0)
-                    if st.button(f"❤️ {likes}", key=key):
-                        for u in st.session_state["uploads"]:
-                            if u["timestamp"] == upload["timestamp"]: u["likes"] = u.get("likes", 0) + 1; break
-                        st.rerun()
-                    st.caption(f"📍 {upload['location']} | ⏰ {upload['timestamp']:%Y-%m-%d %H:%M}")
+                col_index = i % 3
+                with cols[col_index]:
+                    with st.container():
+                        try:
+                            st.image(upload["image_bytes"], caption=f"{upload['caption']} ({upload['user']})", use_column_width='always')
+                        except Exception as e:
+                             st.error(f"Could not display image: {e}")
+
+                        like_key = f"like_photo_{upload['timestamp'].isoformat()}"
+                        likes = upload.get("likes", 0)
+
+                        if st.button(f"❤️ {likes} Like", key=like_key):
+                            for original_upload in st.session_state["uploads"]:
+                                if original_upload["timestamp"] == upload["timestamp"]:
+                                     original_upload["likes"] = original_upload.get("likes", 0) + 1
+                                     break
+                            st.rerun()
+
+                        st.caption(f"📍 {upload['location']} | ⏰ {upload['timestamp'].strftime('%Y-%m-%d %H:%M')}")
+
     with tab_comments:
-        st.markdown("### 💬 Discussion")
+        st.markdown("### 💬 Community Discussion")
+
         with st.form("comment_form", clear_on_submit=True):
-            txt = st.text_area("Leave message!", max_chars=300, height=100, key="cmt_txt")
-            if st.form_submit_button("Post") and txt:
+            comment_text = st.text_area("Leave a message, tip, or question for the community!", max_chars=300, height=100, key="comment_text_area")
+            submitted = st.form_submit_button("Post Comment")
+
+            if submitted and comment_text:
                 st.session_state["comments"].append({
-                    "user": current_user_name, "comment": txt, "timestamp": datetime.now(), "likes": 0 })
-                st.success("Posted! 💬")
-            elif st.form_submit_button("Post") and not txt: st.warning("Enter comment.")
+                    "user": current_user_name, # Use the generic name
+                    "comment": comment_text,
+                    "timestamp": datetime.now(),
+                    "likes": 0
+                })
+                st.success("Comment posted! 💬")
+            elif submitted and not comment_text:
+                st.warning("Please enter a comment before posting.")
+
         st.markdown("---")
         st.markdown("### Recent Comments:")
-        # Initialize sample comments only once
-        if not st.session_state.get("comments_initialized"):
-            if not st.session_state.get("comments"): # Check if comments list is actually empty
-                st.session_state["comments"] = [
-                    {"user": "GreenThumb", "comment": "Harvested!", "timestamp": datetime(2025, 4, 25, 14, 32), "likes": 12},
-                    {"user": "PlantLover", "comment": "Yellowing basil?", "timestamp": datetime(2025, 4, 26, 9, 15), "likes": 8},
-                    {"user": "UrbanFarmer", "comment": "Garden progress!", "timestamp": datetime(2025, 4, 27, 16, 45), "likes": 15} ]
-            st.session_state["comments_initialized"] = True # Mark as initialized
 
-        if not st.session_state.get("comments"): st.info("No comments yet.")
+        # Initialize sample comments if none exist
+        if not st.session_state.get("comments") and not st.session_state.get("comments_initialized"):
+            sample_comments = [
+                {"user": "GreenThumb", "comment": "Just harvested my first batch of tomatoes! Can't believe how well they turned out.", "timestamp": datetime(2025, 4, 25, 14, 32), "likes": 12},
+                {"user": "PlantLover", "comment": "Has anyone had issues with yellowing leaves on their basil plants? Looking for advice!", "timestamp": datetime(2025, 4, 26, 9, 15), "likes": 8},
+                {"user": "UrbanFarmer", "comment": "The community garden project is coming along nicely! Check out our progress photos.", "timestamp": datetime(2025, 4, 27, 16, 45), "likes": 15}
+            ]
+            st.session_state["comments"] = sample_comments
+            st.session_state["comments_initialized"] = True
+
+        if not st.session_state.get("comments"):
+             st.info("No comments yet. Start the conversation!")
         else:
              for i, entry in enumerate(reversed(st.session_state["comments"])):
                  with st.container():
-                     st.markdown(f"**{entry['user']}** ({entry['timestamp']:%Y-%m-%d %H:%M})")
+                     st.markdown(f"**{entry['user']}** ({entry['timestamp'].strftime('%Y-%m-%d %H:%M')})")
                      st.markdown(f"> {entry['comment']}")
-                     key = f"like_cmt_{entry['timestamp'].isoformat()}"; likes = entry.get("likes", 0)
-                     if st.button(f"❤️ {likes}", key=key, help="Like"):
-                          for c in st.session_state["comments"]:
-                              if c["timestamp"] == entry["timestamp"]: c["likes"] = c.get("likes", 0) + 1; break
+
+                     like_key = f"like_comment_{entry['timestamp'].isoformat()}"
+                     likes = entry.get("likes", 0)
+
+                     if st.button(f"❤️ {likes}", key=like_key, help="Like this comment"):
+                          for original_comment in st.session_state["comments"]:
+                              if original_comment["timestamp"] == entry["timestamp"]:
+                                   original_comment["likes"] = original_comment.get("likes", 0) + 1
+                                   break
                           st.rerun()
+
                      st.markdown("---")
 
-# ------ SPONSOR DASHBOARD FUNCTION ------
-# MUST BE DEFINED BEFORE main()
-# ------ SPONSOR DASHBOARD FUNCTION ------
-# MUST BE DEFINED BEFORE main()
+# ------ SPONSOR DASHBOARD ------
+# Unchanged from the previous version
 def display_sponsor_dashboard():
+    """Displays the dashboard for sponsors."""
     st.markdown("<h1 class='sub-title'>📊 Sponsor Dashboard</h1>", unsafe_allow_html=True)
-    st.markdown("Monitor campaign impact and performance.")
+    st.markdown("Monitor the impact and performance of sponsored campaigns.")
+
+    # Key metrics - Use session state values
     st.markdown("### Key Performance Metrics (Overall)")
+
     col1, col2, col3 = st.columns(3)
-    plants, co2, kits = st.session_state.get('plants_grown',0), st.session_state.get('co2_offset',0), st.session_state.get('seed_kits',0)
-    with col1: st.markdown("<div class='metric-card'>",True); st.metric("Plants Grown", f"{plants} 🌱", f"+{random.randint(50,150)} wk"); st.markdown("</div>",True)
-    with col2: st.markdown("<div class='metric-card'>",True); st.metric("CO₂ Offset", f"{co2} kg", f"+{random.randint(10, 40)} kg"); st.markdown("</div>",True)
-    with col3: st.markdown("<div class='metric-card'>",True); st.metric("Kits Distributed", f"{kits}", f"+{random.randint(30, 80)}"); st.markdown("</div>",True)
+    plants_grown = st.session_state.get('plants_grown', 0)
+    co2_offset = st.session_state.get('co2_offset', 0)
+    seed_kits = st.session_state.get('seed_kits', 0)
+
+    with col1:
+        st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
+        st.metric("Total Plants Grown (All Campaigns)", f"{plants_grown} 🌱", f"+{random.randint(50,150)} this week")
+        st.markdown("</div>", unsafe_allow_html=True)
+    with col2:
+        st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
+        st.metric("Estimated CO₂ Offset", f"{co2_offset} kg", f"+{random.randint(10, 40)} kg")
+        st.markdown("</div>", unsafe_allow_html=True)
+    with col3:
+        st.markdown("<div class='metric-card'>", unsafe_allow_html=True)
+        st.metric("Total Seed Kits Distributed", f"{seed_kits}", f"+{random.randint(30, 80)}")
+        st.markdown("</div>", unsafe_allow_html=True)
+
     st.markdown("---")
 
+    # Campaign performance - Use more realistic data generation
     st.markdown("### Campaign Performance Analysis")
-    camp_names = ['Grow Greens', 'Msg->Meal', 'Waste Aware', 'Urban Farm']
+
+    campaign_names = ['Grow Your Greens', 'From Message to Meal', 'Food Waste Awareness', 'Urban Farming']
     dates = pd.date_range(end=datetime.now(), periods=30, freq='D')
-    n_camps = len(camp_names)
-    try:
-        eng_data = pd.DataFrame(np.random.randint(10, 100, (30, n_camps)), index=dates, columns=camp_names) * np.random.uniform(0.7, 1.5, n_camps)
-        grw_data = pd.DataFrame(np.random.rand(30, n_camps)*5, index=dates, columns=camp_names).cumsum()
-    except Exception as e:
-        st.error(f"Data gen error: {e}"); eng_data = pd.DataFrame(); grw_data = pd.DataFrame()
 
-    tab_eng, tab_grw, tab_roi = st.tabs(["📈 Engagement", "🌱 Growth", "💰 ROI (Sim)"])
-    with tab_eng: st.line_chart(eng_data); st.caption("Sim. daily engagement (30d)")
-    with tab_grw: st.area_chart(grw_data); st.caption("Sim. cumulative growth (30d)")
+    engagement_data = pd.DataFrame(
+        np.random.randint(10, 100, size=(30, len(campaign_names))),
+        index=dates,
+        columns=campaign_names
+    ) * [1.5, 1.2, 0.8, 1.0]
+
+    growth_data = pd.DataFrame(
+        np.random.rand(30, len(campaign_names)) * 5,
+        index=dates,
+        columns=campaign_names
+    ).cumsum()
+
+
+    tab_engage, tab_growth, tab_roi = st.tabs(["📈 Engagement Trends", "🌱 Growth Rate", "💰 ROI Metrics (Example)"])
+
+    with tab_engage:
+        st.line_chart(engagement_data)
+        st.caption("Simulated daily engagement (e.g., interactions, kit requests) across campaigns (last 30 days)")
+
+    with tab_growth:
+        st.area_chart(growth_data)
+        st.caption("Simulated cumulative growth contribution per campaign (last 30 days)")
+
     with tab_roi:
-        st.markdown("#### ROI (Illustrative)")
-        # CORRECTED: Use full numbers, not 'k' notation
-        inv_base = {"Grow Greens": 15000, "Msg->Meal": 12000, "Waste Aware": 8000, "Urban Farm": 10000}
-        inv = {c: inv_base.get(c, 10000) for c in camp_names} # Get investment per campaign
-        eng_sum = eng_data.sum() if not eng_data.empty else pd.Series(0, index=camp_names)
-        grw_last = grw_data.iloc[-1] if not grw_data.empty else pd.Series(0, index=camp_names)
-        val_gen = (eng_sum*0.5 + grw_last*10).round(0)
+        st.markdown("#### Return on Investment (Illustrative)")
+        investment = {"Grow Your Greens": 15000, "From Message to Meal": 12000, "Food Waste Awareness": 8000, "Urban Farming": 10000}
+        value_generated = (engagement_data.sum() * 0.5 + growth_data.iloc[-1] * 10).round(0)
+
         roi_data = []
-        for c in camp_names:
-            cost=inv.get(c,1); val=val_gen.get(c,0); roi=((val-cost)/cost*100) if cost else 0
-            roi_data.append({"Campaign": c, "Invest ($)": cost, "Value ($)": val, "ROI (%)": roi})
-        if roi_data: st.dataframe(pd.DataFrame(roi_data).round(1).set_index("Campaign"), use_container_width=True)
-        else: st.info("ROI data N/A.")
-        st.caption("Note: Illustrative values.")
+        for campaign in campaign_names:
+             cost = investment.get(campaign, 1)
+             value = value_generated.get(campaign, 0)
+             roi_percent = ((value - cost) / cost) * 100 if cost > 0 else 0
+             roi_data.append({"Campaign": campaign, "Investment ($)": cost, "Estimated Value ($)": value, "ROI (%)": roi_percent})
+
+        roi_df = pd.DataFrame(roi_data)
+        st.dataframe(roi_df.set_index("Campaign"), use_container_width=True)
+        st.caption("Note: Value and ROI calculations are illustrative examples.")
+
     st.markdown("---")
 
+    # Campaign management (Simplified for demo)
     st.markdown("### Campaign Management")
-    with st.expander("🚀 Launch New Campaign (Example)"):
-        c1, c2 = st.columns(2)
-        # Use more descriptive variable names in the form
-        with c1:
-            campaign_name=st.text_input("Name", key="sp_c_n")
-            campaign_desc=st.text_area("Desc", key="sp_c_d")
-            target_audience=st.multiselect("Audience", ["Urban", "Families", "Students"], key="sp_c_a")
-        with c2:
-            campaign_budget=st.number_input("Budget ($)", 1000, 100000, 10000, 500, key="sp_c_b") # Corrected min value
-            start_date=st.date_input("Start", key="sp_c_s")
-            end_date=st.date_input("End", key="sp_c_e")
-            campaign_image=st.file_uploader("Image", ['png','jpg'], key="sp_c_i")
-        if st.button("Submit Proposal", key="sp_c_sub"):
-            if all([campaign_name, campaign_desc, campaign_budget, start_date, end_date]) and start_date <= end_date:
-                 st.success("Submitted!")
-            else: st.warning("Fill required fields correctly.")
+
+    with st.expander("🚀 Launch New Campaign (Example Form)"):
+        col1, col2 = st.columns(2)
+        with col1:
+            campaign_name = st.text_input("Campaign Name", key="sponsor_camp_name")
+            campaign_desc = st.text_area("Campaign Description", key="sponsor_camp_desc")
+            target_audience = st.multiselect(
+                "Target Audience",
+                ["Urban Dwellers", "Families", "Students", "Seniors", "Businesses", "Eco-conscious"],
+                key="sponsor_camp_audience"
+                )
+
+        with col2:
+            campaign_budget = st.number_input("Budget ($)", min_value=1000, max_value=100000, value=10000, step=500, key="sponsor_camp_budget")
+            start_date = st.date_input("Start Date", key="sponsor_camp_start")
+            end_date = st.date_input("End Date", key="sponsor_camp_end")
+            uploaded_image = st.file_uploader("Upload Billboard Image", type=['png', 'jpg', 'jpeg'], key="sponsor_camp_img")
+
+        if st.button("Submit Campaign Proposal", key="sponsor_camp_submit"):
+             if campaign_name and campaign_desc and campaign_budget and start_date and end_date and start_date <= end_date:
+                 st.success("Campaign proposal submitted for review by the Growvertising team!")
+             elif not campaign_name or not campaign_desc:
+                 st.warning("Please fill in Campaign Name and Description.")
+             elif start_date > end_date:
+                  st.error("End Date cannot be before Start Date.")
+             else:
+                  st.warning("Please fill in all required fields.")
+
     st.markdown("---")
 
+    # Community analytics (More detailed examples)
     st.markdown("### Community Analytics")
-    col_dem, col_eng = st.columns(2)
-    with col_dem:
-        st.markdown("#### Demographics (Sample)")
-        dem_df = pd.DataFrame({"Age": ["18-24","25-34","35-44","45+"], "%": [18,35,25,22]})
-        st.bar_chart(dem_df.set_index("Age"))
-    with col_eng:
-        st.markdown("#### Engagement (Sample)")
-        up_c = len(st.session_state.get('uploads',[])); cmt_c = len(st.session_state.get('comments',[]))
-        lk_p = sum(u.get('likes',0) for u in st.session_state.get('uploads',[])); lk_c = sum(c.get('likes',0) for c in st.session_state.get('comments',[]))
-        kit_c = max(0, st.session_state.get('seed_kits', 0) - random.randint(700,800))
-        eng_df_disp = pd.DataFrame({"Metric": ["Photos", "Comments", "Likes (Ph)", "Likes (Cmt)", "Kit Claims"], "Count": [up_c, cmt_c, lk_p, lk_c, kit_c]})
-        st.bar_chart(eng_df_disp.set_index("Metric"))
+
+    col_demo, col_engage = st.columns(2)
+    with col_demo:
+        st.markdown("#### User Demographics (Sample)")
+        age_groups = ["18-24", "25-34", "35-44", "45-54", "55+"]
+        percentages = [18, 35, 25, 15, 7]
+        demo_data = pd.DataFrame({"Age Group": age_groups, "Percentage": percentages})
+        st.bar_chart(demo_data.set_index("Age Group"))
+        st.caption("Distribution of active users by age group.")
+
+    with col_engage:
+        st.markdown("#### Top Engaging Content (Sample)")
+        engagement_data = {
+            "Content Type": ["Photo Uploads", "Comments", "Likes (Photos)", "Likes (Comments)", "Seed Kit Claims"],
+            "Count (Last 30d)": [len(st.session_state.get('uploads',[])), len(st.session_state.get('comments',[])), sum(u.get('likes',0) for u in st.session_state.get('uploads',[])), sum(c.get('likes',0) for c in st.session_state.get('comments',[])), st.session_state.get('seed_kits', 0) - random.randint(50,100)] # Example counts
+        }
+        engage_df = pd.DataFrame(engagement_data)
+        st.bar_chart(engage_df.set_index("Content Type"))
+        st.caption("User interactions with community features.")
+
     st.markdown("---")
 
+    # Download reports
     st.markdown("### Download Reports")
-    rep_types = ["Campaign Summary", "Engagement Analysis", "Impact Estimate"]
-    rep_type = st.selectbox("Report Type", rep_types, key="rep_type_sel")
-    cf, cg = st.columns([1, 2])
-    with cf: rep_fmt = st.radio("Format", ["CSV", "PDF"], key="rep_fmt_rad")
-    with cg:
-        rep_fname = f"{rep_type.lower().replace(' ','_')}_report_{datetime.now():%Y%m%d}.{rep_fmt.lower()}"
-        rep_df = pd.DataFrame() # Init empty
-        try:
-            if rep_type == "Campaign Summary":
-                if not eng_data.empty: rep_df=eng_data.sum().reset_index().rename(columns={'index':'Campaign',0:'Engagement'})
-                else: st.warning("No data for Campaign Summary.")
-            elif rep_type == "Engagement Analysis":
-                 rep_df = eng_df_disp.rename(columns={'Count':'Value'}) # Use display data
-            elif rep_type == "Impact Estimate":
-                 rep_df = pd.DataFrame({'Metric':['Plants','CO2 (kg)','Kits'],'Value':[plants,co2,kits]})
-            else: st.error("Unknown report.")
+    report_type = st.selectbox(
+        "Select Report Type",
+        ["Campaign Performance Summary", "User Engagement Analysis", "Environmental Impact Estimate", "Financial Overview"],
+        key="report_type_select"
+        )
+    col_format, col_generate = st.columns([1, 2])
+    with col_format:
+        report_format = st.radio("Report Format", ["CSV", "PDF"], key="report_format_radio")
+    with col_generate:
+        report_filename = f"{report_type.lower().replace(' ', '_')}_report_{datetime.now().strftime('%Y%m%d')}.{report_format.lower()}"
 
-            if not rep_df.empty:
-                csv = rep_df.to_csv(index=False).encode('utf-8')
-                pdf = b"Sample PDF" # Placeholder
-                data = csv if rep_fmt == "CSV" else pdf
-                mime = "text/csv" if rep_fmt == "CSV" else "application/pdf"
-                # Generate button triggers download button display
-                if st.button("Generate & Download", key="gen_rep_btn"):
-                    with st.spinner("Generating..."): time.sleep(1.0)
-                    st.download_button(f"Download {rep_fmt}", data, rep_fname, mime, key="dl_rep_final")
-            else:
-                 # Show disabled button if no data
-                 st.button("Generate & Download", key="gen_rep_btn_dis", disabled=True)
-        except Exception as e:
-            st.error(f"Report gen error: {e}"); st.exception(e)
-            st.button("Generate & Download", key="gen_rep_btn_err", disabled=True)
-      
+        # Simplified report data generation
+        if report_type == "Campaign Performance Summary":
+            report_data_df = engagement_data.reset_index().rename(columns={'index': 'Date'})
+            report_data_csv = report_data_df.to_csv(index=False).encode('utf-8')
+            report_data_pdf = b"Sample PDF data for Campaign Performance"
+        elif report_type == "User Engagement Analysis":
+             report_data_df = engage_df
+             report_data_csv = report_data_df.to_csv(index=False).encode('utf-8')
+             report_data_pdf = b"Sample PDF data for User Engagement"
+        else:
+            report_data_df = pd.DataFrame({'Info': ["Data not available for this sample report"]})
+            report_data_csv = report_data_df.to_csv(index=False).encode('utf-8')
+            report_data_pdf = b"Sample PDF data for selected report"
 
-# ------ ADMIN PANEL FUNCTION ------
-# MUST BE DEFINED BEFORE main()
+        report_data = report_data_csv if report_format == "CSV" else report_data_pdf
+        mime_type = "text/csv" if report_format == "CSV" else "application/pdf"
+
+        if st.button("Generate & Download Report", key="generate_report_btn"):
+            with st.spinner("Generating report..."):
+                time.sleep(1.5)
+                st.download_button(
+                    label=f"Click to Download {report_format}",
+                    data=report_data,
+                    file_name=report_filename,
+                    mime=mime_type,
+                    key="download_report_final"
+                )
+            st.success(f"{report_type} report ready for download.")
+
+# ------ ADMIN PANEL ------
+# Unchanged from the previous version
 def display_admin_panel():
+    """Displays the administrative panel for managing the app."""
     st.markdown("<h1 class='sub-title'>🔧 Admin Panel</h1>", unsafe_allow_html=True)
-    st.info("Displaying administrative functions (simulation only).")
-    tabs = st.tabs(["👤 Users (Sim)", "💬 Content (Sim)", "📈 Stats (Sim)", "⚙️ Settings (Sim)"])
-    with tabs[0]:
-        st.markdown("### User Management (Simulated)")
-        users_df=pd.DataFrame({"Username": ["user_a","user_b","sponsor_x"], "Role": ["user","user","sponsor"], "Status": ["Active","Active","Active"]})
-        st.dataframe(users_df, use_container_width=True, hide_index=True)
-        st.button("Save (Disabled)", disabled=True)
-    with tabs[1]:
-        st.markdown("### Content Moderation (Simulated)")
-        t_ph, t_cm = st.tabs(["Pending Photos", "Reported Comments"])
-        with t_ph:
-            st.markdown("#### Photos Pending"); st.info("No photos pending (Sim).")
-            # Mock display logic if needed
-        with t_cm:
-            st.markdown("#### Reported Comments"); st.info("No comments reported (Sim).")
-            # Mock display logic if needed
-    with tabs[2]:
-        st.markdown("### System Statistics (Simulated)")
-        c1,c2,c3=st.columns(3); c1.metric("Users","248"); c2.metric("Load","23%"); c3.metric("Storage","4.2GB")
-        st.markdown("#### Activity (Sample)"); st.line_chart(np.random.rand(7, 2), use_container_width=True)
-    with tabs[3]:
-        st.markdown("### Settings & Maintenance (Simulated)")
-        st.toggle("Enable Reg.", True, disabled=True); st.number_input("Max Upload", 1, 20, 5, disabled=True)
-        st.markdown("---"); st.markdown("#### Maintenance")
-        tasks = st.multiselect("Select Tasks", ["Clear Cache", "Backup DB"])
-        if st.button("Run Tasks (Sim)") and tasks:
-            prg = st.progress(0); txt=st.empty()
-            for i,t in enumerate(tasks): txt.info(f"Running: {t}"); time.sleep(0.8); prg.progress((i+1)/len(tasks))
-            txt.success("Done! (Sim)"); st.balloons()
-        elif st.button("Run Tasks (Sim)") and not tasks: st.warning("Select tasks.")
+    st.info("This panel shows administrative functions (simulation).") # Changed warning to info
 
-# ------ MAIN FUNCTION ------
-# MUST BE DEFINED AFTER ALL OTHER FUNCTIONS
+    admin_tabs = st.tabs(["👤 User Management", "💬 Content Moderation", "📈 System Statistics", "⚙️ Settings & Maintenance"])
+
+    with admin_tabs[0]:
+        st.markdown("### User Management (Simulated)")
+
+        # Sample user data (no real login data)
+        users_data = {
+            "Username": ["growuser_demo", "sponsor_demo", "admin_demo", "greenthumb_demo", "plantlover_demo"],
+            "Name": ["Green User", "Sponsor One", "Admin User", "Gaia Green", "Peter Plant"],
+            "Simulated Role": ["user", "sponsor", "admin", "user", "user"],
+            "Email": ["g@e.com", "s@e.com", "a@e.com", "gg@e.com", "pp@e.com"],
+            "Last Action": pd.to_datetime(["2025-04-28", "2025-04-27", "2025-04-28", "2025-04-25", "2025-04-26"]),
+            "Status": ["Active", "Active", "Active", "Active", "Active"]
+        }
+        users_df = pd.DataFrame(users_data)
+
+        st.info("Displaying sample user data. Editing is disabled in this demo.")
+        st.dataframe(users_df, use_container_width=True, hide_index=True) # Display as static table
+
+        # Disabled editing controls
+        st.text_input("Search User (disabled)", disabled=True)
+        if st.button("Save User Changes (disabled)", key="save_users_disabled", disabled=True):
+             pass
+
+    with admin_tabs[1]:
+        st.markdown("### Content Moderation (Simulated)")
+
+        mod_tabs = st.tabs(["Pending Photos", "Reported Comments"])
+
+        with mod_tabs[0]:
+            st.markdown("#### Photos Pending Review")
+            # Mock pending photos
+            pending_photos = [
+                  {"id": f"photo_{random.randint(1000,9999)}", "user": "plantlover_demo", "caption": "My new garden setup", "timestamp": datetime.now() - pd.Timedelta(hours=2), "image_bytes": None, "status": "pending"},
+                  {"id": f"photo_{random.randint(1000,9999)}", "user": "greenthumb_demo", "caption": "Urban farming progress", "timestamp": datetime.now() - pd.Timedelta(hours=1), "image_bytes": None, "status": "pending"}
+            ]
+            if not pending_photos:
+                 st.info("No photos currently pending review.")
+            else:
+                 for i, photo in enumerate(pending_photos):
+                     with st.container():
+                         st.markdown(f"**User:** {photo['user']} | **Posted:** {photo['timestamp'].strftime('%Y-%m-%d %H:%M')}")
+                         st.markdown(f"**Caption:** {photo['caption']}")
+                         st.markdown("*(Image preview N/A)*")
+
+                         col1, col2 = st.columns(2)
+                         with col1:
+                             if st.button("Approve (Sim)", key=f"approve_photo_{photo['id']}"):
+                                 st.success(f"Photo approved! (Simulation)")
+                         with col2:
+                             if st.button("Reject (Sim)", key=f"reject_photo_{photo['id']}"):
+                                 st.error(f"Photo rejected! (Simulation)")
+                         st.markdown("---")
+
+        with mod_tabs[1]:
+            st.markdown("#### Reported Comments")
+            # Mock reported comments
+            reported_comments = [
+                  {"id": f"comment_{random.randint(1000,9999)}", "user": "SpamBot_demo", "comment": "Buy cheap widgets now! www.spam.com", "timestamp": datetime.now() - pd.Timedelta(days=1), "reported_by": "greenthumb_demo", "status": "reported"},
+                  {"id": f"comment_{random.randint(1000,9999)}", "user": "RudeUser_demo", "comment": "Your plants look terrible!", "timestamp": datetime.now() - pd.Timedelta(hours=5), "reported_by": "plantlover_demo", "status": "reported"}
+            ]
+            if not reported_comments:
+                 st.info("No comments currently reported.")
+            else:
+                 for i, comment in enumerate(reported_comments):
+                     with st.container():
+                         st.markdown(f"**User:** {comment['user']} | **Reported by:** {comment.get('reported_by', 'Unknown')}")
+                         st.markdown(f"**Comment:**")
+                         st.markdown(f"> {comment['comment']}")
+                         st.caption(f"Posted: {comment['timestamp'].strftime('%Y-%m-%d %H:%M')}")
+
+                         col1, col2 = st.columns(2)
+                         with col1:
+                             if st.button("Dismiss Report (Sim)", key=f"keep_comment_{comment['id']}"):
+                                 st.success(f"Report dismissed. (Simulation)")
+                         with col2:
+                             if st.button("Delete Comment (Sim)", key=f"delete_comment_{comment['id']}"):
+                                 st.warning(f"Comment deleted! (Simulation)")
+                         st.markdown("---")
+
+    with admin_tabs[2]:
+        st.markdown("### System Statistics (Simulated)")
+
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Active Users (Sample)", "248", f"{random.randint(-5, 15)} today")
+        with col2:
+            st.metric("Server Load (Simulated)", f"{random.randint(15, 45)}%", f"{random.randint(-5, 5)}%")
+        with col3:
+            num_uploads = len(st.session_state.get('uploads', []))
+            storage_gb = round(num_uploads * 0.002, 2)
+            st.metric("Estimated Media Storage", f"{storage_gb} GB", f"+{round(random.random()*0.1, 2)} GB")
+
+        st.markdown("#### Activity Overview (Last 7 Days - Sample Data)")
+        activity_dates = pd.date_range(end=datetime.now(), periods=7, freq='D')
+        activity_data = pd.DataFrame({
+             'Page Views': np.random.randint(500, 2000, size=7),
+             'Posts (Photos+Comments)': np.random.randint(10, 50, size=7),
+             'Kit Requests': np.random.randint(5, 25, size=7)
+             }, index=activity_dates)
+        st.line_chart(activity_data)
+
+    with admin_tabs[3]:
+        st.markdown("### Settings & Maintenance (Simulated)")
+
+        st.markdown("#### System Settings (Example)")
+        st.toggle("Enable New User Registration", value=True, key="setting_reg_disabled", disabled=True)
+        st.number_input("Max Upload Size (MB)", min_value=1, max_value=20, value=5, key="setting_upload_disabled", disabled=True)
+        st.selectbox("Default User Role on Signup", ["user", "pending_approval"], key="setting_role_disabled", disabled=True)
+
+        if st.button("Save Settings (Disabled)", key="save_settings_disabled", disabled=True):
+             pass
+
+        st.markdown("---")
+        st.markdown("#### Maintenance Tasks")
+
+        task_options = {
+            "Clear Application Cache": "Clears Streamlit's internal caches.",
+            "Backup Database": "Triggers a backup of the application database (simulation).",
+            "Recalculate User Statistics": "Updates derived stats like badges or activity scores.",
+        }
+
+        selected_tasks = st.multiselect(
+            "Select Maintenance Tasks to Run",
+            list(task_options.keys()),
+            help="Select one or more tasks to execute.",
+            key="maint_tasks"
+        )
+
+        if st.button("Run Selected Maintenance Tasks (Sim)", key="run_maint") and selected_tasks:
+            progress_bar = st.progress(0)
+            status_text = st.empty()
+            for i, task in enumerate(selected_tasks):
+                 status_text.info(f"Simulating: {task} ({task_options[task]})")
+                 time.sleep(random.uniform(0.5, 1.0)) # Simulate work
+                 progress_bar.progress((i + 1) / len(selected_tasks))
+            status_text.success(f"Completed {len(selected_tasks)} maintenance tasks! (Simulation)")
+            st.balloons()
+        elif st.button("Run Selected Maintenance Tasks (Sim)", key="run_maint_no_select") and not selected_tasks:
+             st.warning("Please select at least one maintenance task to run.")
+
+
+# ------ MAIN APP LOGIC ------
 def main():
-    """Main function to run the Streamlit application."""
-    # --- Initialization ---
-    # This MUST be called after initialize_data is defined
+    """Main function to run the Streamlit application without authentication."""
+
+    # --- Data Initialization ---
+    # Initialize data using session state
     billboards = initialize_data()
 
-    # --- Sidebar & Page Selection ---
-    # This MUST be called after display_sidebar is defined
+    # --- Sidebar Navigation & Role Simulation ---
+    # Display sidebar and get selected page and simulated role
     page, simulated_role = display_sidebar()
 
-    # --- User Name for Community ---
-    current_user_name = "Demo User"
+    # Define a generic user name for display purposes
+    current_user_name = "Community User" # Can be changed if desired
 
-    # --- Page Rendering ---
-    # This requires all display_ functions to be defined first
+    # --- Page Content Rendering ---
+    # Display content based on selected page and simulated role
     if page == "Home":
         display_home(billboards)
     elif page == "My Plants":
         display_my_plants()
     elif page == "Community":
-        display_community(current_user_name)
+        display_community(current_user_name) # Pass the generic name
     elif page == "Sponsor Dashboard":
-        if simulated_role in ["sponsor", "admin"]:
-            display_sponsor_dashboard()
-        else:
-            st.error("Access Denied")
+        # Access controlled by sidebar logic based on simulated_role
+        display_sponsor_dashboard()
     elif page == "Admin Panel":
-        if simulated_role == "admin":
-            display_admin_panel()
-        else:
-            st.error("Access Denied")
+        # Access controlled by sidebar logic based on simulated_role
+        display_admin_panel()
 
-    # --- Footer ---
+    # --- Footer --- (Optional)
     st.markdown("---")
-    st.caption("🌿 Growvertising Demo © 2025")
+    st.caption("🌿 Growvertising Demo © 2025 | Transforming Ads into Action")
 
-# ------ SCRIPT EXECUTION GUARD ------
-# This should be the LAST part of the script
+
 if __name__ == "__main__":
-    main() # Call main() only when script is run directly
+    main()
