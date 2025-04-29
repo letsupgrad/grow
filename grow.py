@@ -98,10 +98,11 @@ def initialize_data():
 
     # Billboard data remains the same
     billboards = {
-        "Grow Your Greens": {
-            "url": "https://www.freepik.com/free-photo/digital-screen-with-environment-day_12976397.htm#fromView=keyword&page=1&position=2&uuid=e4229294-f5c7-4d17-b456-32015da4c1ce&query=Go+Green",
-            "description": "A campaign promoting home vegetable gardening for urban dwellers.",
-            "sponsor": "OrganicFoods Co."
+    "Grow Your Greens": {
+        # Using the 'From Message to Meal' image for now
+        "url": "https://i.imgur.com/GQhuf0U.jpg",
+        "description": "A campaign promoting home vegetable gardening for urban dwellers.",
+        "sponsor": "OrganicFoods Co."
         },
         "From Message to Meal": {
             "url": "https://i.imgur.com/GQhuf0U.jpg",
