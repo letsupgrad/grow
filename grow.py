@@ -964,7 +964,7 @@ def main():
 
     # --- Footer --- (Optional)
     st.markdown("---")
-    st.caption("this application demonstrates | Growvertising" concept, connecting **advertising campaigns (Billboards)** with tangible **environmental action (Farmboards)**, specifically promoting and tracking home gardening. It simulates a platform for different user roles:|Users:** Participate in campaigns, track personal plant growth, and engage with the community.|Sponsors:** Fund campaigns and monitor their impact through analytics.|Admins:** Oversee the simulated platform.|Goal:** To showcase how advertising can be linked to positive environmental action and community building.")
+    st.caption("this application demonstrates | Growvertising concept connecting  advertising campaigns (Billboards) with tangible  environmental action (Farmboards) specifically promoting and tracking home gardening. It simulates a platform for different user roles  ,Users Participate in campaigns, track personal plant growth, and engage with the community.|Sponsors Fund campaigns and monitor their impact through analytics.|Admins:Oversee the simulated platform.|Goal:** To showcase how advertising can be linked to positive environmental action and community building.")
                
       
     # Added attribution as requested
