@@ -120,7 +120,7 @@ def initialize_data():
             "sponsor": "WasteNot Foundation"
         },
         "Urban Farming Revolution": {
-            "url": "https://i.imgur.com/U4A0lRQ.jpg", # Using same image for example
+            "url": "busy-group-farmers-modern-entrepreneurial-bio-agricultural-greenhouse-used-growing-natural-healthy-eco-vegetables-regenerative-agriculture-using-pesticide-free-soil-fertilizer.jpg", # Using same image for example
             "description": "Transforming city spaces into productive green gardens.",
             "sponsor": "CityGrow Initiative"
         }
