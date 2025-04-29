@@ -63,7 +63,8 @@ def setup_authentication():
         cookie_expiry_days=30
     )
     
-    name, auth_status, username = authenticator.login("Login", "sidebar")
+    # FIX: Correct parameter order - 'sidebar' should be the location and 'Login' should be the label
+    name, auth_status, username = authenticator.login('sidebar', 'Login')
     
     if auth_status == False:
         st.sidebar.error("Invalid username/password")
