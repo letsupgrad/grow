@@ -974,7 +974,7 @@ def main():
         **Goal:** To showcase how advertising can be linked to positive environmental action and community building.
         """) 
                
-      
+     st.markdown("---")   
     # Added attribution as requested
     st.caption("🌿 Growvertising © 2025 | Transforming Ads into Action | developed by sangita biswas")
 
