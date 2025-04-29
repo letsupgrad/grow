@@ -105,7 +105,7 @@ def initialize_data():
     billboards = {
         "Grow Your Greens": {
             # Corrected URL to point to a direct image file
-            "url": "https://i.imgur.com/U4A0lRQ.jpg",
+            "url": "digital-screen-with-environment-day.jpg",
             "description": "A campaign promoting home vegetable gardening for urban dwellers.",
             "sponsor": "OrganicFoods Co."
         },
