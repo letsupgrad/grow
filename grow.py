@@ -115,7 +115,7 @@ def initialize_data():
             "sponsor": "EcoEats"
         },
         "Food Waste Awareness": {
-            "url": "https://i.imgur.com/XY5NJJx.jpg",
+            "url": "assortment-compost-made-rotten-food.jpg",
             "description": "Highlighting the importance of reducing food waste in our communities.",
             "sponsor": "WasteNot Foundation"
         },
