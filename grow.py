@@ -197,6 +197,7 @@ def display_sidebar():
         - **Admin Panel**: (Admin Role) Manage users and content.
         - **Support**: Email help@growvertising.com
         """)
+        
         st.markdown("---") # Separator
 
         st.markdown("#### About This App (Growvertising Demo)")
