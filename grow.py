@@ -503,6 +503,25 @@ def display_community(current_user_name="Community User"): # Default user name
 
 # ------ SPONSOR DASHBOARD ------
 # Unchanged from the previous version
+import streamlit as st
+from datetime import datetime
+import random
+import pandas as pd
+import numpy as np
+import time
+import io # Keep io for download button
+
+# Note: Assuming other necessary parts of the script (like initialize_data) exist elsewhere.
+# Also assuming session state variables ('plants_grown', 'co2_offset', 'seed_kits', 'uploads', 'comments')
+# are initialized before this function is called.
+
+# ------ PAGE CONFIGURATION (Example - might be in main script) ------
+# st.set_page_config(layout="wide")
+
+# ------ CSS STYLING (Example - might be in main script) ------
+# st.markdown("""<style> ... </style>""", unsafe_allow_html=True)
+
+# ------ SPONSOR DASHBOARD ------
 def display_sponsor_dashboard():
     """Displays the dashboard for sponsors."""
     st.markdown("<h1 class='sub-title'>📊 Sponsor Dashboard</h1>", unsafe_allow_html=True)
@@ -537,6 +556,7 @@ def display_sponsor_dashboard():
     campaign_names = ['Grow Your Greens', 'From Message to Meal', 'Food Waste Awareness', 'Urban Farming']
     dates = pd.date_range(end=datetime.now(), periods=30, freq='D')
 
+    # This is the DataFrame for campaign trends
     engagement_data = pd.DataFrame(
         np.random.randint(10, 100, size=(30, len(campaign_names))),
         index=dates,
@@ -553,7 +573,7 @@ def display_sponsor_dashboard():
     tab_engage, tab_growth, tab_roi = st.tabs(["📈 Engagement Trends", "🌱 Growth Rate", "💰 ROI Metrics (Example)"])
 
     with tab_engage:
-        st.line_chart(engagement_data)
+        st.line_chart(engagement_data) # Uses the DataFrame defined above
         st.caption("Simulated daily engagement (e.g., interactions, kit requests) across campaigns (last 30 days)")
 
     with tab_growth:
@@ -563,6 +583,7 @@ def display_sponsor_dashboard():
     with tab_roi:
         st.markdown("#### Return on Investment (Illustrative)")
         investment = {"Grow Your Greens": 15000, "From Message to Meal": 12000, "Food Waste Awareness": 8000, "Urban Farming": 10000}
+        # Uses the engagement_data DataFrame and growth_data DataFrame correctly
         value_generated = (engagement_data.sum() * 0.5 + growth_data.iloc[-1] * 10).round(0)
 
         roi_data = []
@@ -624,13 +645,22 @@ def display_sponsor_dashboard():
 
     with col_engage:
         st.markdown("#### Top Engaging Content (Sample)")
-        engagement_data = {
+        # --- FIX: Use a different variable name for this dictionary ---
+        community_engagement_dict = {
             "Content Type": ["Photo Uploads", "Comments", "Likes (Photos)", "Likes (Comments)", "Seed Kit Claims"],
-            "Count (Last 30d)": [len(st.session_state.get('uploads',[])), len(st.session_state.get('comments',[])), sum(u.get('likes',0) for u in st.session_state.get('uploads',[])), sum(c.get('likes',0) for c in st.session_state.get('comments',[])), st.session_state.get('seed_kits', 0) - random.randint(50,100)] # Example counts
+            "Count (Last 30d)": [
+                len(st.session_state.get('uploads', [])),
+                len(st.session_state.get('comments', [])),
+                sum(u.get('likes', 0) for u in st.session_state.get('uploads', [])),
+                sum(c.get('likes', 0) for c in st.session_state.get('comments', [])),
+                # Calculate based on current kits minus some baseline if needed for 'last 30d' simulation
+                max(0, st.session_state.get('seed_kits', 0) - (st.session_state.get('seed_kits', 0) // 1.1 if st.session_state.get('seed_kits', 0) > 100 else random.randint(50,100)))
+            ]
         }
-        engage_df = pd.DataFrame(engagement_data)
+        # --- FIX: Create engage_df from the new dictionary name ---
+        engage_df = pd.DataFrame(community_engagement_dict)
         st.bar_chart(engage_df.set_index("Content Type"))
-        st.caption("User interactions with community features.")
+        st.caption("User interactions with community features (approx. last 30 days).")
 
     st.markdown("---")
 
@@ -649,33 +679,62 @@ def display_sponsor_dashboard():
 
         # Simplified report data generation
         if report_type == "Campaign Performance Summary":
+            # Now correctly uses the engagement_data DataFrame
             report_data_df = engagement_data.reset_index().rename(columns={'index': 'Date'})
             report_data_csv = report_data_df.to_csv(index=False).encode('utf-8')
-            report_data_pdf = b"Sample PDF data for Campaign Performance"
+            report_data_pdf = b"Sample PDF data for Campaign Performance" # Placeholder PDF
         elif report_type == "User Engagement Analysis":
+             # Correctly uses engage_df (derived from community_engagement_dict)
              report_data_df = engage_df
              report_data_csv = report_data_df.to_csv(index=False).encode('utf-8')
-             report_data_pdf = b"Sample PDF data for User Engagement"
-        else:
-            report_data_df = pd.DataFrame({'Info': ["Data not available for this sample report"]})
+             report_data_pdf = b"Sample PDF data for User Engagement" # Placeholder PDF
+        elif report_type == "Financial Overview":
+             # Use roi_df defined in the ROI tab
+             report_data_df = roi_df
+             report_data_csv = report_data_df.to_csv(index=True).encode('utf-8') # Index=True as campaign is index
+             report_data_pdf = b"Sample PDF data for Financial Overview" # Placeholder PDF
+        else: # Environmental Impact Estimate or other
+            # Create a simple placeholder DataFrame for environmental impact
+            env_impact_data = {
+                "Metric": ["Total Plants Grown", "Estimated CO₂ Offset (kg)", "Water Saved (Est. Liters)"],
+                "Value": [plants_grown, co2_offset, plants_grown * random.randint(5, 15)]
+            }
+            report_data_df = pd.DataFrame(env_impact_data)
             report_data_csv = report_data_df.to_csv(index=False).encode('utf-8')
-            report_data_pdf = b"Sample PDF data for selected report"
+            report_data_pdf = b"Sample PDF data for Environmental Impact" # Placeholder PDF
 
         report_data = report_data_csv if report_format == "CSV" else report_data_pdf
         mime_type = "text/csv" if report_format == "CSV" else "application/pdf"
 
-        if st.button("Generate & Download Report", key="generate_report_btn"):
+        # Check if button already exists in session state from previous run within the spinner
+        # This prevents error on rerun after download
+        if f"download_report_final_{report_filename}" not in st.session_state:
+             st.session_state[f"download_report_final_{report_filename}"] = False
+
+        if st.button("Generate & Download Report", key=f"generate_report_btn_{report_filename}"):
             with st.spinner("Generating report..."):
-                time.sleep(1.5)
+                time.sleep(1.0) # Shortened sleep
+                # Use a unique key for the download button based on filename to avoid reuse issues
                 st.download_button(
                     label=f"Click to Download {report_format}",
                     data=report_data,
                     file_name=report_filename,
                     mime=mime_type,
-                    key="download_report_final"
+                    key=f"download_report_final_{report_filename}" # Unique key
                 )
-            st.success(f"{report_type} report ready for download.")
+            # Can't show success *after* download button logic in this structure easily
+            # st.success(f"{report_type} report ready for download.") # This might appear too early or late
 
+# --- Example Usage (if running this file directly) ---
+# if __name__ == "__main__":
+#     # Minimal initialization for testing this function
+#     if "comments" not in st.session_state: st.session_state["comments"] = []
+#     if "uploads" not in st.session_state: st.session_state["uploads"] = []
+#     if "plants_grown" not in st.session_state: st.session_state["plants_grown"] = random.randint(1000, 1500)
+#     if "co2_offset" not in st.session_state: st.session_state["co2_offset"] = random.randint(300, 500)
+#     if "seed_kits" not in st.session_state: st.session_state["seed_kits"] = random.randint(700, 1000)
+#
+#     display_sponsor_dashboard()
 # ------ ADMIN PANEL ------
 # Unchanged from the previous version
 def display_admin_panel():
